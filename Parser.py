@@ -1,18 +1,8 @@
-def __parse(text):
-    out = []
-    for c in text:
-        if c != '*':
-            out.append(c)
-        else:
-            out[-1] += c
-    return out
-
-
 def postfix_parse(ER):
-    precedence = {".": 2, "|": 1}
+    precedence = {"*":3, ".": 2, "|": 1}
     stack = []
     postfix = []
-    tokens = __parse(ER)
+    tokens = list(ER) 
     for token in tokens:
         if token not in "*.|":
             postfix.append(token)

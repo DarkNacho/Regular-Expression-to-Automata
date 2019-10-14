@@ -16,13 +16,16 @@ class NFA:
         else:
             self.setStateSize(2)
             self.terminal = 1
-            if value[-1] == '*':
-                temp = NFA(value[0]).kleene()
-                self.terminal = temp.terminal
-                self.states = temp.states
-                self.transitions = temp.transitions
-            else:
+            if value != "0":
                 self.transitions.append(_Transition(value, 0, 1))
+            else:
+                self.__phi()
+
+    def __phi(self):
+        keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        for key in keys:
+            self.transitions.append((_Transition(key, 0, 0)))
+        return self
 
     def getAdjacenceList(self):
         list = [[] for j in range(len(self.transitions))]
@@ -34,16 +37,15 @@ class NFA:
         self.states = [i for i in range(n)]
 
     def concat(self, nfa):
-        nfa.states.pop(0)
+        result = NFA(len(self.states) + len(nfa.states) - 1)
+        for t in self.transitions:
+            result.transitions.append((_Transition(t.key, t.state_from, t.state_to)))
+
         for t in nfa.transitions:
-            self.transitions.append(
-                _Transition(t.key, t.state_from + len(self.states) - 1, t.state_to + len(self.states) - 1))
+            result.transitions.append(_Transition(t.key, t.state_from + len(self.states)-1, t.state_to + len(self.states)-1))
 
-        for s in nfa.states:
-            self.states.append(s + len(self.states) + 1)
-
-        self.terminal = len(self.states) + len(nfa.states) - 2
-        return self
+        result.terminal = self.terminal + nfa.terminal
+        return result
 
     def union(self, nfa):
         result = NFA(len(self.states) + len(nfa.states) + 2)
@@ -63,8 +65,7 @@ class NFA:
             _Transition("_", len(nfa.states) + len(self.states), len(nfa.states) + len(self.states) + 1))
 
         result.terminal = len(self.states) + len(nfa.states) + 1
-        self = result
-        return self;
+        return result
 
     def kleene(self):
         result = NFA(len(self.states) + 2)
@@ -78,8 +79,7 @@ class NFA:
         result.transitions.append(_Transition("_", 0, len(self.states) + 1))
 
         result.terminal = len(self.states) + 1
-        self = result
-        return self
+        return result
 
     def __dfs(self, node, regex, index, adj):
         if self.terminal == node:
